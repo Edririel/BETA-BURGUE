@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
     <title>Beta Burger - Melhor Hambúrguer da Cidade</title>
 </head>
 
@@ -51,8 +52,9 @@
 
     <section id="cardapio" class="cardapio">
         <h2>Nosso Cardápio</h2>
-        <p>Escolha seu favorito e faça seu pedido pelo WhatsApp</p>
+        <p>Escolha seus itens, monte o carrinho e envie o pedido pelo WhatsApp</p>
 
+        <h3 class="categoria">Hambúrgueres</h3>
         <ul class="menu-grid">
             <li class="menu-item">
                 <img src="https://images.unsplash.com/photo-1550317138-10000687a72b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
@@ -61,7 +63,7 @@
                 <h3>Big Beta</h3>
                 <p>Pão brioche, hambúrguer 200g, salada (alface, tomate e repolho), batata rústica e queijo parmesão</p>
                 <strong>R$ 29,90</strong>
-                <a href="https://wa.me/5573981250533" class="btn" target="_blank">Pedir</a>
+                <button type="button" class="btn add-btn" data-id="big-beta" data-name="Big Beta" data-price="29.90">Adicionar ao carrinho</button>
             </li>
 
             <li class="menu-item">
@@ -71,7 +73,7 @@
                 <h3>Bacon Supreme</h3>
                 <p>Pão australiano, hambúrguer 200g, bacon crocante, cheddar, cebola caramelizada e molho barbecue</p>
                 <strong>R$ 34,90</strong>
-                <a href="https://wa.me/5573981250533" class="btn" target="_blank">Pedir</a>
+                <button type="button" class="btn add-btn" data-id="bacon-supreme" data-name="Bacon Supreme" data-price="34.90">Adicionar ao carrinho</button>
             </li>
 
             <li class="menu-item">
@@ -81,7 +83,72 @@
                 <h3>Veggie Beta</h3>
                 <p>Pão integral, burger de grão-de-bico, alface, tomate, rúcula e molho especial de iogurte</p>
                 <strong>R$ 27,90</strong>
-                <a href="https://wa.me/5573981250533" class="btn" target="_blank">Pedir</a>
+                <button type="button" class="btn add-btn" data-id="veggie-beta" data-name="Veggie Beta" data-price="27.90">Adicionar ao carrinho</button>
+            </li>
+        </ul>
+
+        <h3 class="categoria">Batatas recheadas</h3>
+        <ul class="menu-grid">
+            <li class="menu-item">
+                <div class="menu-emoji" aria-hidden="true">🍟</div>
+                <h3>Batata Cheddar e Bacon</h3>
+                <p>Batata frita coberta com cheddar cremoso e bacon crocante</p>
+                <strong>R$ 24,90</strong>
+                <button type="button" class="btn add-btn" data-id="batata-cheddar-e-bacon" data-name="Batata Cheddar e Bacon" data-price="24.90">Adicionar ao carrinho</button>
+            </li>
+
+            <li class="menu-item">
+                <div class="menu-emoji" aria-hidden="true">🍟</div>
+                <h3>Batata Quatro Queijos</h3>
+                <p>Batata frita coberta com mix de queijos gratinados</p>
+                <strong>R$ 26,90</strong>
+                <button type="button" class="btn add-btn" data-id="batata-quatro-queijos" data-name="Batata Quatro Queijos" data-price="26.90">Adicionar ao carrinho</button>
+            </li>
+        </ul>
+
+        <h3 class="categoria">Milkshakes</h3>
+        <ul class="menu-grid">
+            <li class="menu-item">
+                <div class="menu-emoji" aria-hidden="true">🥤</div>
+                <h3>Milkshake de Chocolate</h3>
+                <p>Milkshake cremoso de chocolate</p>
+                <strong>R$ 16,90</strong>
+                <button type="button" class="btn add-btn" data-id="milkshake-de-chocolate" data-name="Milkshake de Chocolate" data-price="16.90">Adicionar ao carrinho</button>
+            </li>
+
+            <li class="menu-item">
+                <div class="menu-emoji" aria-hidden="true">🥤</div>
+                <h3>Milkshake de Morango</h3>
+                <p>Milkshake cremoso de morango</p>
+                <strong>R$ 16,90</strong>
+                <button type="button" class="btn add-btn" data-id="milkshake-de-morango" data-name="Milkshake de Morango" data-price="16.90">Adicionar ao carrinho</button>
+            </li>
+
+            <li class="menu-item">
+                <div class="menu-emoji" aria-hidden="true">🥤</div>
+                <h3>Milkshake de Baunilha</h3>
+                <p>Milkshake cremoso de baunilha</p>
+                <strong>R$ 16,90</strong>
+                <button type="button" class="btn add-btn" data-id="milkshake-de-baunilha" data-name="Milkshake de Baunilha" data-price="16.90">Adicionar ao carrinho</button>
+            </li>
+        </ul>
+
+        <h3 class="categoria">Bebidas</h3>
+        <ul class="menu-grid">
+            <li class="menu-item">
+                <div class="menu-emoji" aria-hidden="true">🥫</div>
+                <h3>Refrigerante lata</h3>
+                <p>Lata 350ml, bem gelada</p>
+                <strong>R$ 6,00</strong>
+                <button type="button" class="btn add-btn" data-id="refrigerante-lata" data-name="Refrigerante lata" data-price="6.00">Adicionar ao carrinho</button>
+            </li>
+
+            <li class="menu-item">
+                <div class="menu-emoji" aria-hidden="true">🥤</div>
+                <h3>Refrigerante 2 litros</h3>
+                <p>Garrafa de 2 litros, bem gelada</p>
+                <strong>R$ 12,00</strong>
+                <button type="button" class="btn add-btn" data-id="refrigerante-2-litros" data-name="Refrigerante 2 litros" data-price="12.00">Adicionar ao carrinho</button>
             </li>
         </ul>
     </section>
@@ -145,5 +212,40 @@
             <p>© 2026 Beta Burger. Todos os direitos reservados.</p>
         </div>
     </footer>
+
+    <button type="button" id="carrinho-abrir" class="carrinho-fab" aria-label="Abrir carrinho">
+        <span aria-hidden="true">🛒</span> Carrinho <span id="carrinho-contagem" class="carrinho-contagem" aria-live="polite">0</span>
+    </button>
+    <div id="carrinho-overlay" class="carrinho-overlay"></div>
+    <aside id="carrinho" class="carrinho" role="dialog" aria-modal="true" aria-labelledby="carrinho-titulo">
+        <div class="carrinho-topo">
+            <h2 id="carrinho-titulo">Seu pedido</h2>
+            <button type="button" id="carrinho-fechar" aria-label="Fechar carrinho">✕</button>
+        </div>
+        <ul id="carrinho-itens" class="carrinho-itens"></ul>
+        <p id="carrinho-vazio" class="carrinho-vazio">Seu carrinho está vazio. Escolha um item no cardápio.</p>
+        <form id="carrinho-rodape" class="carrinho-rodape">
+            <label>Nome<input name="nome" required minlength="2" maxlength="80" autocomplete="name"></label>
+            <label>WhatsApp<input name="telefone" type="tel" inputmode="tel" required minlength="10" maxlength="20" autocomplete="tel" placeholder="(73) 99999-9999"></label>
+            <fieldset class="carrinho-tipo">
+                <legend>Como quer receber</legend>
+                <label><input type="radio" name="tipo" value="entrega" checked> Entrega</label>
+                <label><input type="radio" name="tipo" value="retirada"> Retirada</label>
+            </fieldset>
+            <label id="campo-endereco">Endereço<input id="carrinho-endereco" name="endereco" required maxlength="200" autocomplete="street-address" placeholder="Rua, número, bairro"></label>
+            <label>Pagamento<select name="pagamento"><option value="pix">Pix</option><option value="cartao">Cartão</option><option value="dinheiro">Dinheiro</option></select></label>
+            <label>Observações (opcional)<textarea name="obs" rows="2" maxlength="300" placeholder="Ex.: sem cebola, troco para R$ 50"></textarea></label>
+            <p class="carrinho-total"><span>Total</span> <strong id="carrinho-total">R$ 0,00</strong></p>
+            <p id="carrinho-erro" class="carrinho-erro" role="alert"></p>
+            <button type="submit" id="carrinho-enviar" class="btn">Fazer pedido</button>
+            <button type="button" id="carrinho-limpar" class="carrinho-limpar">Limpar carrinho</button>
+        </form>
+        <div id="carrinho-sucesso" class="carrinho-sucesso" hidden>
+            <h3>Pedido recebido</h3>
+            <p id="carrinho-numero" class="carrinho-numero"></p>
+            <p>A cozinha já foi avisada. Guarde este número.</p>
+            <button type="button" id="carrinho-sucesso-fechar" class="btn">Fechar</button>
+        </div>
+    </aside>
 </body>
 </html>

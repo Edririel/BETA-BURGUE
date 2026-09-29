@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Cozinha · Beta Burger</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f3f3; color: #1a1a1a; }
+        button, input { font: inherit; }
+        .login { max-width: 360px; margin: 12vh auto; padding: 1.5rem; background: #fff; border-radius: 16px; display: grid; gap: 1rem; }
+        .login label { display: grid; gap: 0.25rem; font-weight: 600; font-size: 0.9rem; }
+        .login input { padding: 0.7rem; border: 1px solid #ccc; border-radius: 8px; }
+        .erro { color: #a32d2d; font-size: 0.9rem; }
+        .erro:empty { display: none; }
+        .btn { padding: 0.75rem 1rem; border: 0; border-radius: 8px; background: #f1c232; color: #1a1a1a; font-weight: 600; cursor: pointer; }
+        .btn:hover { background: #d9a920; }
+        .btn-claro { background: #fff; border: 1px solid #ccc; }
+        .btn:focus-visible, input:focus-visible { outline: 3px solid #1a1a1a; outline-offset: 2px; }
+        header { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #1a1a1a; color: #fff; }
+        header h1 { font-size: 1.2rem; }
+        .barra { display: flex; gap: 0.75rem; align-items: center; font-size: 0.9rem; }
+        .status::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: #97c459; }
+        .status.off::before { background: #ef9f27; }
+        .quadro { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; padding: 1rem; align-items: start; }
+        .coluna h2 { display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; border-radius: 8px; font-size: 1rem; }
+        .c-novo h2 { background: #e6f1fb; color: #0c447c; }
+        .c-preparo h2 { background: #faeeda; color: #633806; }
+        .c-pronto h2 { background: #eaf3de; color: #27500a; }
+        .lista { display: grid; gap: 0.75rem; }
+        .vazio { color: #666; padding: 0.5rem 0.75rem; font-size: 0.9rem; }
+        .pedido { background: #fff; border-radius: 12px; padding: 1rem; display: grid; gap: 0.6rem; border: 2px solid transparent; }
+        .pedido.novo { border-color: #378add; }
+        .topo { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 600; }
+        .tempo { color: #666; font-weight: 400; font-size: 0.9rem; white-space: nowrap; }
+        .itens { list-style: none; font-size: 1.1rem; }
+        .obs { background: #faeeda; color: #633806; padding: 0.4rem 0.6rem; border-radius: 8px; font-size: 0.95rem; }
+        .info { font-size: 0.9rem; color: #444; display: grid; gap: 0.15rem; }
+        .info a { color: inherit; }
+        .rodape { display: flex; justify-content: space-between; font-weight: 600; }
+        @media (prefers-reduced-motion: no-preference) { .pedido.novo { animation: pulsa 1.2s ease-in-out 3; } }
+        @keyframes pulsa { 50% { border-color: #f1c232; } }
+    </style>
+</head>
+<body>
+    <form id="login" class="login">
+        <h1>Cozinha · Beta Burger</h1>
+        <label>E-mail<input id="email" type="email" required autocomplete="username"></label>
+        <label>Senha<input id="senha" type="password" required autocomplete="current-password"></label>
+        <p id="login-erro" class="erro" role="alert"></p>
+        <button class="btn" type="submit">Entrar</button>
+    </form>
+
+    <div id="painel" hidden>
+        <header>
+            <h1>Cozinha · Beta Burger</h1>
+            <div class="barra">
+                <span id="status" class="status off">Conectando…</span>
+                <button id="som" class="btn btn-claro" type="button">Ativar som</button>
+                <button id="sair" class="btn btn-claro" type="button">Sair</button>
+            </div>
+        </header>
+        <main id="quadro" class="quadro"></main>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://galmddmirvqzspsnbhdl.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_m95sGjOdUQ_9Y2il8KyxUg_mtIL-Ius';
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const $ = (s) => document.querySelector(s);
+        const colunas = [
+            { k: 'novo', t: 'Novos', btn: 'Iniciar preparo' },
+            { k: 'preparo', t: 'Preparando', btn: 'Marcar como pronto' },
+            { k: 'pronto', t: 'Prontos', btn: 'Concluir pedido' }
+        ];
+        const proximo = { novo: 'preparo', preparo: 'pronto', pronto: 'concluido' };
+        const pgto = { pix: 'Pix', cartao: 'Cartão', dinheiro: 'Dinheiro' };
+        const brl = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        let pedidos = new Map();
+        let canal = null, timer = null, audio = null;
+
+        function el(tag, classe, texto) {
+            const e = document.createElement(tag);
+            if (classe) e.className = classe;
+            if (texto !== undefined) e.textContent = texto;
+            return e;
+        }
+
+        function ligarSom() {
+            if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+            audio.resume();
+            $('#som').textContent = 'Som ligado';
+        }
+
+        function bipe() {
+            if (!audio || audio.state !== 'running') return;
+            [0, 0.25].forEach((atraso) => {
+                const o = audio.createOscillator(), g = audio.createGain();
+                o.frequency.value = 880;
+                g.gain.value = 0.2;
+                o.connect(g).connect(audio.destination);
+                o.start(audio.currentTime + atraso);
+                o.stop(audio.currentTime + atraso + 0.18);
+            });
+        }
+
+        function minutos(p) { return Math.max(0, Math.round((Date.now() - new Date(p.criado_em)) / 60000)); }
+
+        function cartao(p, c) {
+            const d = el('article', 'pedido ' + p.status);
+            const topo = el('div', 'topo');
+            topo.append(el('span', null, `#${p.numero} ${p.nome}`), el('span', 'tempo', `há ${minutos(p)} min`));
+            const ul = el('ul', 'itens');
+            (p.itens || []).forEach((i) => ul.append(el('li', null, `${i.qtd}x ${i.nome}`)));
+            d.append(topo, ul);
+            if (p.observacao) d.append(el('p', 'obs', p.observacao));
+            const info = el('div', 'info');
+            info.append(el('span', null, p.tipo === 'entrega' ? `Entrega: ${p.endereco}` : 'Retirada no balcão'));
+            const tel = el('a', null, p.telefone);
+            tel.href = 'tel:' + String(p.telefone).replace(/\D/g, '');
+            const linhaTel = el('span', null, 'Telefone: ');
+            linhaTel.append(tel);
+            info.append(linhaTel, el('span', null, `Pagamento: ${pgto[p.pagamento] || p.pagamento}`));
+            const rodape = el('div', 'rodape');
+            rodape.append(el('span', null, 'Total'), el('span', null, brl(p.total)));
+            const b = el('button', 'btn', c.btn);
+            b.type = 'button';
+            b.dataset.id = p.id;
+            d.append(info, rodape, b);
+            return d;
+        }
+
+        function render() {
+            const q = $('#quadro');
+            q.replaceChildren();
+            const todos = [...pedidos.values()].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em));
+            colunas.forEach((c) => {
+                const lista = todos.filter((p) => p.status === c.k);
+                const col = el('section', 'coluna c-' + c.k);
+                const h = el('h2', null, c.t);
+                h.append(el('span', null, String(lista.length)));
+                const box = el('div', 'lista');
+                if (lista.length) lista.forEach((p) => box.append(cartao(p, c)));
+                else box.append(el('p', 'vazio', 'Nenhum pedido'));
+                col.append(h, box);
+                q.append(col);
+            });
+            const novos = todos.filter((p) => p.status === 'novo').length;
+            document.title = (novos ? `(${novos}) ` : '') + 'Cozinha · Beta Burger';
+        }
+
+        async function carregar() {
+            const desde = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+            const { data, error } = await db.from('pedidos').select('*')
+                .gte('criado_em', desde).neq('status', 'concluido').order('criado_em');
+            if (error) return;
+            pedidos = new Map(data.map((p) => [p.id, p]));
+            render();
+        }
+
+        function conectar() {
+            canal = db.channel('pedidos-cozinha')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, (m) => {
+                    const p = m.new;
+                    if (m.eventType === 'INSERT') { pedidos.set(p.id, p); bipe(); }
+                    else if (m.eventType === 'UPDATE') {
+                        if (p.status === 'concluido') pedidos.delete(p.id); else pedidos.set(p.id, p);
+                    }
+                    render();
+                })
+                .subscribe((estado) => {
+                    const ok = estado === 'SUBSCRIBED';
+                    const s = $('#status');
+                    s.textContent = ok ? 'Ao vivo' : 'Reconectando…';
+                    s.classList.toggle('off', !ok);
+                    if (ok) carregar();
+                });
+            timer = setInterval(() => { carregar(); }, 60000);
+            setInterval(render, 30000);
+        }
+
+        async function entrar() {
+            const { data: ok } = await db.rpc('is_equipe');
+            if (!ok) {
+                await db.auth.signOut();
+                $('#login').hidden = false;
+                $('#painel').hidden = true;
+                $('#login-erro').textContent = 'Este e-mail não tem acesso à cozinha.';
+                return;
+            }
+            $('#login').hidden = true;
+            $('#painel').hidden = false;
+            await carregar();
+            if (!canal) conectar();
+        }
+
+        $('#login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            ligarSom();
+            $('#login-erro').textContent = '';
+            const { error } = await db.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#senha').value });
+            if (error) { $('#login-erro').textContent = 'E-mail ou senha incorretos.'; return; }
+            entrar();
+        });
+
+        $('#som').addEventListener('click', ligarSom);
+
+        $('#sair').addEventListener('click', async () => {
+            await db.auth.signOut();
+            location.reload();
+        });
+
+        $('#quadro').addEventListener('click', async (e) => {
+            const b = e.target.closest('button[data-id]');
+            if (!b) return;
+            const p = pedidos.get(b.dataset.id);
+            b.disabled = true;
+            const { error } = await db.from('pedidos').update({ status: proximo[p.status] }).eq('id', p.id);
+            if (error) { b.disabled = false; alert('Não foi possível atualizar o pedido. Tente de novo.'); return; }
+            if (proximo[p.status] === 'concluido') pedidos.delete(p.id); else p.status = proximo[p.status];
+            render();
+        });
+
+        db.auth.getSession().then(({ data }) => { if (data.session) entrar(); });
+    </script>
+</body>
+</html>
